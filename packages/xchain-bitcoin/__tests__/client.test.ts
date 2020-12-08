@@ -3,12 +3,11 @@ import { Client } from '../src/client'
 import { MIN_TX_FEE } from '../src/utils'
 import { baseAmount, AssetBTC } from '@xchainjs/xchain-util'
 
-import mockBlockchairApi from '../__mocks__/block-chair'
-mockBlockchairApi.init()
-
-const btcClient = new Client({ network: 'mainnet', nodeUrl: 'mock', nodeApiKey: 'mock' })
+// import mockBlockchairApi from '../__mocks__/block-chair'
 
 describe('BitcoinClient Test', () => {
+  const btcClient = new Client({ network: 'mainnet', nodeUrl: 'mock', nodeApiKey: 'mock' })
+  // mockBlockchairApi.init()
   beforeEach(() => {
     btcClient.purgeClient()
   })
@@ -316,5 +315,40 @@ describe('BitcoinClient Test', () => {
     expect(btcClient.getExplorerTxUrl('anotherTestTxHere')).toEqual(
       'https://blockstream.info/testnet/tx/anotherTestTxHere',
     )
+  })
+})
+
+describe('compare txs', () => {
+  it('send tx (Sochain)', async () => {
+    const c = new Client({
+      network: 'testnet',
+      phrase: '', // add your phrase of your account
+    })
+    const amount = baseAmount(1000)
+    const txid = await c.transferSochain({
+      asset: AssetBTC,
+      recipient: 'tb1qag9n59rh204098v24qstxdv8dk4q6cwt7kr8z9',
+      amount,
+      feeRate: 5,
+    })
+    console.log('txid', txid)
+    expect(txid).toEqual(expect.any(String))
+  })
+  it.only('send tx (Blockchair)', async () => {
+    const c = new Client({
+      network: 'testnet',
+      nodeUrl: 'https://api.blockchair.com/bitcoin/testnet',
+      nodeApiKey: '', // Blockhair API key
+      phrase: '', // add your phrase of your account
+    })
+    const amount = baseAmount(1002)
+    const txid = await c.transfer({
+      asset: AssetBTC,
+      recipient: 'tb1qtephp596jhpwrawlp67junuk347zl2cwc56xml',
+      amount,
+      feeRate: 5,
+    })
+    console.log('txid', txid)
+    expect(txid).toEqual(expect.any(String))
   })
 })

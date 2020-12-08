@@ -3,7 +3,7 @@ import * as Bitcoin from 'bitcoinjs-lib'
 
 let UTXO: Utils.UTXO[]
 
-describe('Bitcoin Utils Test', () => {
+describe.skip('Bitcoin Utils Test', () => {
   const witness = {
     script: Buffer.from('0014123f6562aa047dae2d38537327596cd8e9e21932'),
     value: 10000,

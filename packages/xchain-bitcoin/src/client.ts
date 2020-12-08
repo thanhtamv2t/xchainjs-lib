@@ -1,3 +1,4 @@
+import axios from 'axios'
 import * as Bitcoin from 'bitcoinjs-lib' // https://github.com/bitcoinjs/bitcoinjs-lib
 import * as Utils from './utils'
 import * as blockChair from './blockchair-api'
@@ -387,24 +388,24 @@ class Client implements BitcoinClient, XChainClient {
     }
   }
 
-  transfer = async ({
+  private signAndExtractTx = async ({
     asset = AssetBTC,
     amount,
     recipient,
     memo,
     feeRate,
-  }: TxParams & { feeRate: FeeRate }): Promise<TxHash> => {
+  }: TxParams & { feeRate: FeeRate }): Promise<string> => {
     await this.scanUTXOs()
     const balance = await this.getBalance()
     const btcBalance = balance.find((balance) => balance.asset.symbol === asset.symbol)
     if (!btcBalance) {
-      throw new Error('No btcBalance found')
+      return Promise.reject('No btcBalance found')
     }
     if (this.utxos.length === 0) {
-      throw new Error('No utxos to send')
+      return Promise.reject('No utxos to send')
     }
     if (!this.validateAddress(recipient)) {
-      throw new Error('Invalid address')
+      return Promise.reject('Invalid address')
     }
     const btcNetwork = this.btcNetwork()
     const btcKeys = this.getBtcKeys(this.phrase)
@@ -414,7 +415,7 @@ class Client implements BitcoinClient, XChainClient {
       ? Utils.getVaultFee(this.utxos, compiledMemo, feeRateWhole)
       : Utils.getNormalFee(this.utxos, feeRateWhole)
     if (amount.amount().plus(fee).isGreaterThan(btcBalance.amount.amount())) {
-      throw new Error('Balance insufficient for transaction')
+      return Promise.reject('Balance insufficient for transaction')
     }
     const psbt = new Bitcoin.Psbt({ network: btcNetwork }) // Network-specific
     //Inputs
@@ -439,7 +440,26 @@ class Client implements BitcoinClient, XChainClient {
     psbt.signAllInputs(btcKeys) // Sign all inputs
     psbt.finalizeAllInputs() // Finalise inputs
     const txHex = psbt.extractTransaction().toHex() // TX extracted and formatted to hex
+    return txHex
+  }
+
+  transfer = async (params: TxParams & { feeRate: FeeRate }): Promise<TxHash> => {
+    const txHex = await this.signAndExtractTx(params)
     return await blockChair.broadcastTx(this.nodeUrl, txHex, this.nodeApiKey)
+  }
+
+  transferSochain = async (params: TxParams & { feeRate: FeeRate }): Promise<TxHash> => {
+    const txHex = await this.signAndExtractTx(params)
+    // https://sochain.com/api#send-transaction
+    const url = 'https://sochain.com/api/v2/send_tx/BTCTEST'
+    try {
+      const response = await axios.post<{ data: { txid: string } }>(url, {
+        tx_hex: txHex,
+      })
+      return response.data.data.txid
+    } catch (e) {
+      return Promise.reject(e)
+    }
   }
 }
 
