@@ -102,7 +102,7 @@ class Client implements CosmosClient, XChainClient {
    * @returns {string} The client url for cosmos chain based on the network.
    */
   getClientUrl = (): string => {
-    return this.network === 'testnet' ? 'http://lcd.gaia.bigdipper.live:1317' : 'https://api.cosmos.network'
+    return this.network === 'testnet' ? 'http://lcd.gaia.bigdipper.live:1317' : 'https://lcd-cosmos-app.cosmostation.io'
   }
 
   /**
