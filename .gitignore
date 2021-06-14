@@ -10,5 +10,5 @@ results
 packages/xchain-client/.DS_Store
 packages/xchain-client/yarn-error.log
 
-packages/*/lib
+# packages/*/lib
 packages/*/yarn.lock

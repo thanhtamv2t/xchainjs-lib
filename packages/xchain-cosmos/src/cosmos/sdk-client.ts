@@ -236,7 +236,8 @@ export class CosmosSDKClient {
           ],
         }),
       ]
-      const signatures: StdTxSignature[] = []
+      
+      const signatures: StdTxSignature[] =  []
 
       const unsignedStdTx = StdTx.fromJSON({
         msg,
@@ -255,7 +256,6 @@ export class CosmosSDKClient {
     unsignedStdTx: StdTx,
     privkey: PrivKey,
     signer: AccAddress,
-    isSigned: Boolean,
   ): Promise<BroadcastTxCommitResult> => {
     try {
       this.setPrefix()
@@ -272,10 +272,23 @@ export class CosmosSDKClient {
         account.account_number.toString(),
         account.sequence.toString(),
       )
+        
+      
 
-      if(isSigned){
-        return signedStdTx;
-      }
+      // const test = signedStdTx?.signatures?.slice().map(it=> {
+      //   return {
+      //     ...it, 
+      //     pub_key: {
+      //       type: 'tendermint/PubKeySecp256k1',
+      //       value: it.pub_key.toBase64()
+      //     }
+      //   }
+      // })
+
+      // if(signedStdTx !== null){
+      //   signedStdTx.signatures = test
+      // }
+      
 
       return await auth.txsPost(this.sdk, signedStdTx, 'block').then((res) => res.data)
     } catch (error) {
