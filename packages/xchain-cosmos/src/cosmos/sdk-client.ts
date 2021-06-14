@@ -255,6 +255,7 @@ export class CosmosSDKClient {
     unsignedStdTx: StdTx,
     privkey: PrivKey,
     signer: AccAddress,
+    isSigned: Boolean,
   ): Promise<BroadcastTxCommitResult> => {
     try {
       this.setPrefix()
@@ -271,6 +272,10 @@ export class CosmosSDKClient {
         account.account_number.toString(),
         account.sequence.toString(),
       )
+
+      if(isSigned){
+        return signedStdTx;
+      }
 
       return await auth.txsPost(this.sdk, signedStdTx, 'block').then((res) => res.data)
     } catch (error) {
